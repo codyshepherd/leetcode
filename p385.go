@@ -1,10 +1,3 @@
-package main
-
-import (
-	"strconv"
-	"unicode"
-)
-
 /**
  * // This is the interface that allows for creating nested lists.
  * // You should not implement it, or speculate about its implementation
@@ -30,6 +23,40 @@ import (
  * // You can access NestedInteger's List element directly if you want to modify it
  * func (n NestedInteger) GetList() []*NestedInteger {}
  */
+
+import (
+	"strconv"
+	"unicode"
+)
+
+type Token string
+
+const (
+	POPEN  Token = "POPEN"
+	PCLOSE       = "PCLOSE"
+	COMMA        = "COMMA"
+	DASH         = "DASH"
+	NUM          = "NUM"
+	EOF          = "EOF"
+)
+
+var mapme = map[byte]Token{
+	'[': POPEN,
+	']': PCLOSE,
+	',': COMMA,
+	'-': DASH,
+	'0': NUM,
+	'1': NUM,
+	'2': NUM,
+	'3': NUM,
+	'4': NUM,
+	'5': NUM,
+	'6': NUM,
+	'7': NUM,
+	'8': NUM,
+	'9': NUM,
+}
+
 func TakeWhile(p func(rune) bool, s string) string {
 	for i, r := range s {
 		if !p(r) {
@@ -39,117 +66,103 @@ func TakeWhile(p func(rune) bool, s string) string {
 	return s
 }
 
-const BOPEN byte = '['
-const BCLOSED byte = ']'
-const COMMA byte = ','
-const DASH byte = '-'
+//cursor, number
+func num(s string, cursor int) (int, int) {
+	num, _ := strconv.Atoi(TakeWhile(func(r rune) bool {
+		if unicode.IsNumber(r) {
+			return true
+		} else {
+			return false
+		}
+	}, s[cursor:]))
 
-type single int
-type list []single
-
-func tokens(s string) list {
-	switch s[0] {
-	case BOPEN:
-		nl := new(list)
-
+	for cursor < len(s) && unicode.IsNumber(rune(s[cursor])) {
+		cursor++
 	}
+	return cursor, num
+
+}
+
+//Token, cursor, arg to num token
+func token(s string, cursor int) (Token, int, int) {
+	var lastarg int
+	if cursor >= len(s) {
+		return EOF, cursor, lastarg
+	}
+	t := mapme[s[cursor]]
+	if t == NUM {
+		cursor, lastarg = num(s, cursor)
+	} else if t == DASH {
+		cursor, lastarg = num(s, cursor+1)
+		lastarg = -lastarg
+	} else {
+		cursor++
+	}
+
+	return t, cursor, lastarg
+}
+
+func trim(s string) string {
+	parens := 1
+	var ss string
+	for i, v := range s {
+		if v == ']' {
+			parens--
+		}
+		if v == '[' {
+			parens++
+		}
+		if parens == 0 {
+			ss = s[:i]
+			break
+		}
+	}
+	return ss
+}
+
+func parse(s string, cursor int) *NestedInteger {
+	var thislist *NestedInteger = new(NestedInteger)
+
+	t, c, n := token(s, cursor)
+
+	for t != EOF {
+		switch t {
+		case POPEN:
+			substring := trim(s[c:])
+			l := len(substring)
+			if len(substring) == 0 {
+				inner := new(NestedInteger)
+				thislist.Add(*inner)
+			} else {
+				inner := parse(substring, 0)
+				thislist.Add(*inner)
+			}
+			c += l
+		case COMMA:
+		case NUM, DASH:
+			inner := new(NestedInteger)
+			inner.SetInteger(n)
+			thislist.Add(*inner)
+		}
+		t, c, n = token(s, c)
+	}
+	return thislist
 }
 
 func deserialize(s string) *NestedInteger {
-	switch s[0] {
-	case BOPEN:
-		var outer *NestedInteger = new(NestedInteger)
-
+	if s[0] != '[' {
+		_, _, n := token(s, 0)
+		nl := new(NestedInteger)
+		nl.SetInteger(n)
+		return nl
 	}
-}
+	substring := trim(s[1:])
 
-/*  Do below, but "look ahead". i.e. look at next "token", add()ing.
-Create new object & recurse only on brackets
-*/
-
-func deserialize(s string) *NestedInteger {
-	if len(s) == 0 {
-		return nil
-	} else if s == "[]" {
-		var we *NestedInteger = new(NestedInteger)
-		return we
+	var first *NestedInteger
+	if len(substring) == 0 {
+		first = new(NestedInteger)
+	} else {
+		first = parse(substring, 0)
 	}
-
-	switch s[0] {
-	case BOPEN:
-		if s[1] == '[' {
-			var we *NestedInteger = new(NestedInteger)
-			ni := deserialize(s[1:])
-			if ni != nil {
-				we.Add(*ni)
-			}
-			return we
-		} else if s[1] == ']' {
-			var we *NestedInteger = new(NestedInteger)
-			return we
-		}
-		return deserialize(s[1:])
-	case BCLOSED:
-		return nil
-	case COMMA:
-		return deserialize(s[1:])
-	case DASH:
-		var busta *NestedInteger = new(NestedInteger)
-		value, _ := strconv.Atoi(TakeWhile(func(r rune) bool {
-			if unicode.IsNumber(r) {
-				return true
-			} else {
-				return false
-			}
-		}, s[1:]))
-		i := 1
-		for unicode.IsNumber(rune(s[i])) {
-			i++
-			if i >= len(s) {
-				break
-			}
-		}
-		var inner *NestedInteger = new(NestedInteger)
-		inner.SetInteger(-value)
-		if i < len(s) {
-			busta.Add(*inner)
-			ni := deserialize(s[i:])
-			if ni != nil {
-				busta.Add(*ni)
-			}
-		} else {
-			return inner
-		}
-
-		return busta
-	default:
-		var busta *NestedInteger = new(NestedInteger)
-		value, _ := strconv.Atoi(TakeWhile(func(r rune) bool {
-			if unicode.IsNumber(r) {
-				return true
-			} else {
-				return false
-			}
-		}, s))
-		i := 0
-		for unicode.IsNumber(rune(s[i])) {
-			i++
-			if i >= len(s) {
-				break
-			}
-		}
-		var inner *NestedInteger = new(NestedInteger)
-		inner.SetInteger(value)
-		if i < len(s) {
-			busta.Add(*inner)
-			ni := deserialize(s[i:])
-			if ni != nil {
-				busta.Add(*ni)
-			}
-		} else {
-			return inner
-		}
-
-		return busta
-	}
+	return first
 }

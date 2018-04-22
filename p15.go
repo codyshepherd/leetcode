@@ -46,7 +46,15 @@ func check(nums []int, lst [][]int) bool {
 
 	return true //true == no duplicate found
 }
-*/
+
+func isIn(target int, nums []int) bool {
+	for _, num := range nums {
+		if target == num {
+			return true
+		}
+	}
+	return false
+}
 
 func sum(nums []int) int {
 	sum := 0
@@ -56,13 +64,15 @@ func sum(nums []int) int {
 	return sum
 }
 
-func isIn(target int, nums []int) bool {
-	for _, num := range nums {
-		if target == num {
-			return true
-		}
+*/
+
+func sliceToString(slyce [3]int) string {
+	st := ""
+	for _, i := range slyce {
+		st += strconv.Itoa(i)
+		st += ","
 	}
-	return false
+	return st
 }
 
 func allZeros(nums []int) bool {
@@ -92,17 +102,8 @@ func divide(nums []int) ([]int, []int, []int) {
 	return negs, zeros, pos
 }
 
-func sliceToString(slyce []int) string {
-	st := ""
-	for _, i := range slyce {
-		st += strconv.Itoa(i)
-		st += ","
-	}
-	return st
-}
-
 func threeSum(nums []int) [][]int {
-	var memo = make(map[string]bool)
+	var memo = make(map[string][]int)
 	var ll [][]int
 	if len(nums) < 3 {
 		return ll
@@ -113,93 +114,111 @@ func threeSum(nums []int) [][]int {
 	}
 
 	negs, zeros, pos := divide(nums)
-	//fmt.Println(negs)
-	//fmt.Println(pos)
-	if len(zeros) >= 3 {
-		ll = append(ll, []int{0, 0, 0})
-	}
-	if len(zeros) != 0 {
+	lz := len(zeros)
+
+	if lz != 0 {
 		negs = append(negs, 0)
 		pos = append([]int{0}, pos...)
 	}
+
+	ln := len(negs)
+	lp := len(pos)
 	n := 0
 	p := 0
 	i := 0
 	pair := 0
-	for n < len(negs) {
+	st := ""
+	old := 0
+	pold := 0
+	nold := 0
+	var arr = [3]int{0, 0, 0}
+	for n < ln {
 		i = n + 1
-		for i < len(negs) {
+		for i < ln {
 			pair = negs[n] + negs[i]
-			//fmt.Println(negs[n], negs[i])
-			p = 0
-			for p < len(pos) {
-				//fmt.Println(pos[p])
-				if pos[p] == 0-pair {
-					//fmt.Println("Appending: ", []int{negs[n], negs[i], pos[p]})
-					arr := []int{negs[n], negs[i], pos[p]}
-					sort.Ints(arr)
-					st := sliceToString(arr)
-					if !memo[st] {
-						ll = append(ll, arr)
-						memo[st] = true
+			p = lp - 1
+			for p >= 0 {
+				if pos[p] == -pair {
+					arr[0] = negs[n]
+					arr[1] = negs[i]
+					arr[2] = pos[p]
+					//sort.Ints(arr)
+					st = sliceToString(arr)
+					//if !memo[arr] {
+					if _, ok := memo[st]; !ok {
+						//ll = append(ll, arr)
+						memo[st] = []int{arr[0], arr[1], arr[2]}
+						//memo[arr] = true
 					}
 				}
-				if pos[p] > 0-pair {
+				if pos[p] < -pair {
 					break
 				}
-				pold := pos[p]
-				for p < len(pos) && pos[p] == pold {
-					p++
+				pold = pos[p]
+				for p >= 0 && pos[p] == pold {
+					p--
 				}
 			}
-			old := negs[i]
-			for i < len(negs) && negs[i] == old {
+			old = negs[i]
+			for i < ln && negs[i] == old {
 				i++
 			}
 		}
-		old := negs[n]
-		for n < len(negs) && negs[n] == old {
+		old = negs[n]
+		for n < ln && negs[n] == old {
 			n++
 		}
 	}
 	n = 0
 	p = 0
 	i = 0
-	for p < len(pos) {
+	for p < lp {
 		i = p + 1
-		for i < len(pos) {
+		for i < lp {
 			pair = pos[p] + pos[i]
-			//fmt.Println(pos[p], pos[i])
-			n = 0
-			for n < len(negs) {
-				//fmt.Println(negs[n])
-				if negs[n] == 0-pair {
-					//fmt.Println("Appending: ", []int{pos[p], pos[i], negs[n]})
-					arr := []int{pos[p], pos[i], negs[n]}
-					sort.Ints(arr)
-					st := sliceToString(arr)
-					if !memo[st] {
-						ll = append(ll, arr)
-						memo[st] = true
+			n = ln - 1
+			for n >= 0 {
+				if negs[n] == -pair {
+					arr[0] = negs[n]
+					arr[1] = pos[p]
+					arr[2] = pos[i]
+					//arr = []int{pos[p], pos[i], negs[n]}
+					//sort.Ints(arr)
+					st = sliceToString(arr)
+					//if !memo[arr] {
+					if _, ok := memo[st]; !ok {
+						//ll = append(ll, arr)
+						memo[st] = []int{arr[0], arr[1], arr[2]}
+						//memo[arr] = true
 					}
 				}
-				if negs[n] > 0-pair {
+				if negs[n] < -pair {
 					break
 				}
-				nold := negs[n]
-				for n < len(negs) && negs[n] == nold {
-					n++
+				nold = negs[n]
+				for n >= 0 && negs[n] == nold {
+					n--
 				}
 			}
-			old := pos[i]
-			for i < len(pos) && pos[i] == old {
+			old = pos[i]
+			for i < lp && pos[i] == old {
 				i++
 			}
 		}
-		old := pos[p]
-		for p < len(pos) && pos[p] == old {
+		old = pos[p]
+		for p < lp && pos[p] == old {
 			p++
 		}
+	}
+
+	ll = make([][]int, len(memo))
+	i = 0
+	for _, v := range memo {
+		ll[i] = v
+		i++
+	}
+	if lz >= 3 {
+		ll = append(ll, []int{0, 0, 0})
 	}
 	return ll
 }

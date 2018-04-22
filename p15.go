@@ -131,12 +131,14 @@ func threeSum(nums []int) [][]int {
 	old := 0
 	pold := 0
 	nold := 0
+	last := lp - 1
+	//largest := pos[last]
 	var arr = [3]int{0, 0, 0}
 	for n < ln {
 		i = n + 1
 		for i < ln {
 			pair = negs[n] + negs[i]
-			p = lp - 1
+			p = last
 			for p >= 0 {
 				if pos[p] == -pair {
 					arr[0] = negs[n]
@@ -150,6 +152,9 @@ func threeSum(nums []int) [][]int {
 						memo[st] = []int{arr[0], arr[1], arr[2]}
 						//memo[arr] = true
 					}
+				}
+				if n == i-1 && pos[p] > -pair {
+					last = p
 				}
 				if pos[p] < -pair {
 					break
@@ -172,11 +177,12 @@ func threeSum(nums []int) [][]int {
 	n = 0
 	p = 0
 	i = 0
+	last = ln - 1
 	for p < lp {
 		i = p + 1
 		for i < lp {
 			pair = pos[p] + pos[i]
-			n = ln - 1
+			n = last
 			for n >= 0 {
 				if negs[n] == -pair {
 					arr[0] = negs[n]
@@ -191,6 +197,9 @@ func threeSum(nums []int) [][]int {
 						memo[st] = []int{arr[0], arr[1], arr[2]}
 						//memo[arr] = true
 					}
+				}
+				if p == i-1 && negs[n] > -pair {
+					last = n
 				}
 				if negs[n] < -pair {
 					break

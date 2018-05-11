@@ -18,16 +18,6 @@ func wiggleSort(nums []int) {
 		middle += 1
 	}
 
-	/*
-		if nums[middle-1] == nums[middle] {
-			if middle-2 >= 0 && nums[middle-2] == nums[middle] {
-				middle += 1
-			} else if middle+2 < len(nums) && nums[middle+2] == nums[middle] {
-				middle -= 1
-			}
-		}
-	*/
-
 	fmt.Println("sorted ", nums)
 	fmt.Println("middle ", middle)
 
@@ -41,8 +31,6 @@ func wiggleSort(nums []int) {
 		high = nums[middle:]
 	}
 
-	//i := 0 //ind for low
-	//j := 0
 	i := len(low) - 1
 	j := len(high) - 1
 
@@ -52,9 +40,7 @@ func wiggleSort(nums []int) {
 	var wnums []int
 	for !lempty && !hempty {
 		wnums = append(wnums, low[i])
-		//fmt.Println("Adding low ", low[i])
 		wnums = append(wnums, high[j])
-		//fmt.Println("Adding high ", high[j])
 
 		i -= 1
 		j -= 1
@@ -70,14 +56,11 @@ func wiggleSort(nums []int) {
 		wnums = append(wnums, low[i])
 		i -= 1
 	}
-	//if j < len(high) {
 
 	for j >= 0 {
 		wnums = append(wnums, high[j])
 		j -= 1
 	}
-	//return wnums
-	//nums = wnums.copy()
 	_ = copy(nums, wnums)
 }
 
